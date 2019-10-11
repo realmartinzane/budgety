@@ -16,6 +16,17 @@ var budgetController = (function()
         this.value = value;
     }
 
+    var totalCalculate = function(type)
+    {
+        var sum = 0;
+
+        data.items[type].forEach(function(cur)
+        {
+            sum += cur.value;
+        });
+        data.totals[type] = sum;
+    }
+
     var data = 
     {
         items: 
@@ -28,7 +39,10 @@ var budgetController = (function()
         {
             expenses: 0,
             income: 0
-        }
+        },
+        
+        budget: 0,
+        percentage: -1
     };
 
 
@@ -55,6 +69,29 @@ var budgetController = (function()
             return itemNew;
             
         },
+
+        budgetCalculate: function()
+        {
+            totalCalculate('income');   
+            totalCalculate('expenses');
+
+            data.budget = data.totals.income - data.totals.expenses;
+
+            if(data.totals.income > 0)
+                data.percentage = Math.round((data.totals.expenses / data.totals.income) * 100);
+            else 
+                data.percentage = -1;
+        },
+
+        getBudget: function()
+        {
+            return {
+                budget: data.budget,
+                incomeTotal: data.totals.income,
+                еxpensesTotal: data.totals.expenses,
+                percentage: data.percentage
+            }
+        }
     }
 
 
@@ -71,7 +108,11 @@ var UIController = (function()
         inputValue: '.add__value',
         inputBtn: '.add__btn',
         incomeContainer: '.income__list',
-        expensesContainer: '.expenses__list'
+        expensesContainer: '.expenses__list',
+        budgetLabel: '.budget__value',
+        incomeLabel: '.budget__income--value',
+        expensesLabel: '.budget__expenses--value',
+        percentageLabel: '.budget__expenses--percentage'
     }
     
     return {
@@ -80,7 +121,7 @@ var UIController = (function()
             return {
                 type: document.querySelector(DOMstrings.inputType).value,
                 description: document.querySelector(DOMstrings.inputDescription).value,
-                value: document.querySelector(DOMstrings.inputValue).value
+                value: parseFloat(document.querySelector(DOMstrings.inputValue).value)
             }
         },
 
@@ -123,9 +164,21 @@ var UIController = (function()
             });
 
             fieldsArray[0].focus();
+        },
+
+        budgetDisplay: function (data) 
+        {
+            document.querySelector(DOMstrings.budgetLabel).textContent = data.budget;
+            document.querySelector(DOMstrings.incomeLabel).textContent = '+ '+ data.incomeTotal;
+            document.querySelector(DOMstrings.expensesLabel).textContent = '- ' + data.еxpensesTotal;
+            
+
+            if(data.percentage > 0)
+                document.querySelector(DOMstrings.percentageLabel).textContent = data.percentage + '%';
+            else 
+                document.querySelector(DOMstrings.percentageLabel).textContent = '---';
         }
     }
-
 })();
 
 // GLOBAL APP CONTROLLER
@@ -147,23 +200,45 @@ var controller = (function(budgetCtrl, UICtrl)
         })
     }
 
+    var updateBudget = function()
+    {
+        budgetCtrl.budgetCalculate();
+
+        var budget = budgetCtrl.getBudget();
+
+        UICtrl.budgetDisplay(budget);
+    }
+
     var ctrlAddItem = function()
     {
         var input, itemNew;
 
         input = UICtrl.getInput();
 
-        itemNew = budgetCtrl.itemAdd(input.type, input.description, input.value);
+        if(input.description !== '' && !isNaN(input.value) && input.value > 0)
+        {
+            itemNew = budgetCtrl.itemAdd(input.type, input.description, input.value);
 
-        UICtrl.listItemAdd(itemNew, input.type);
+            UICtrl.listItemAdd(itemNew, input.type);
 
-        UICtrl.clearFields();
+            UICtrl.clearFields();
+
+            updateBudget();
+        }
 
     };
     
     return {
         init: function()
         {
+            UICtrl.budgetDisplay(
+                {
+                    budget: 0,
+                    incomeTotal: 0,
+                    еxpensesTotal: 0,
+                    percentage: -1
+                }
+            );
             setupEventListeners();
         }
     }
