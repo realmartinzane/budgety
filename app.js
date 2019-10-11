@@ -184,6 +184,14 @@ var UIController = (function()
         return (type == 'expenses' ? '-' : '+') + ' ' + int + '.' + dec;
     }
 
+    var nodeListForEach = function(list, callback)
+    {
+        for (var i = 0; i < list.length; i++)
+        {
+            callback(list[i], i);
+        }
+    }
+
     
     return {
         getInput: function() 
@@ -261,14 +269,6 @@ var UIController = (function()
         {
             var fields = document.querySelectorAll(DOMstrings.expensesPercentageLabel);
 
-            var nodeListForEach = function(list, callback)
-            {
-                for (var i = 0; i < list.length; i++)
-                {
-                    callback(list[i], i);
-                }
-            }
-
             nodeListForEach(fields, function(cur, idx)
             {
                 if (percentages[idx] > 0)
@@ -287,6 +287,21 @@ var UIController = (function()
             months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
             document.querySelector(DOMstrings.dateLabel).textContent = months[month] + ' ' + year;
+        },
+
+        changeType: function()
+        {
+            var fields = document.querySelectorAll(
+                DOMstrings.inputType + ', ' +
+                DOMstrings.inputDescription + ', ' +
+                DOMstrings.inputValue)
+
+            nodeListForEach(fields, function(cur)
+            {
+                cur.classList.toggle('red-focus')
+            });
+
+            document.querySelector(DOMstrings.inputBtn).classList.toggle('red');
         }
     }
 })();
@@ -309,6 +324,8 @@ var controller = (function(budgetCtrl, UICtrl)
         })
 
         document.querySelector(DOMstrings.container).addEventListener('click', ctrlDeleteItem);
+
+        document.querySelector(DOMstrings.inputType).addEventListener('change', UICtrl.changeType);
     }
 
     var updateBudget = function()
@@ -369,9 +386,7 @@ var controller = (function(budgetCtrl, UICtrl)
             updateBudget();
 
             updatePercentages();
-        }
-
-        
+        }        
     };
     
     return {
