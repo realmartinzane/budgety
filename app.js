@@ -36,21 +36,34 @@ var UIController = (function()
 // GLOBAL APP CONTROLLER
 var controller = (function(budgetCtrl, UICtrl) 
 {
-    var DOMstrings = UICtrl.getDOMstrings();
+    var setupEventListeners = function() 
+    {
+
+        var DOMstrings = UICtrl.getDOMstrings();
+
+        document.querySelector(DOMstrings.inputBtn).addEventListener('click', ctrlAddItem);
+
+        document.addEventListener('keypress', function (event) 
+        {
+            if (event.keyCode == 13 || event.which == 13) 
+            ctrlAddItem();
+            
+        })
+    }
 
     var ctrlAddItem = function()
     {
         var input = UICtrl.getInput();
-        console.log(input)
+    };
+    
+    return {
+        init: function()
+        {
+            console.log('init')
+            setupEventListeners();
+        }
     }
     
-    document.querySelector(DOMstrings.inputBtn).addEventListener('click', ctrlAddItem);
-
-    document.addEventListener('keypress', function(event) 
-    {
-        if(event.keyCode == 13 || event.which == 13)
-        {
-            ctrlAddItem();
-        }
-    })
 })(budgetController, UIController);
+
+controller.init();
